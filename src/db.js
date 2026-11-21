@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const Database = require('better-sqlite3');
 const { PATHS, setupLogger } = require('./utils');
@@ -9,9 +10,45 @@ const DB_CONSTANTS = {
     MAX_HISTORY_PER_GAME: 100,
 };
 
+/**
+ * Pick a writable location for the SQLite file.
+ * InjectCloud only persists /app/data (and /app/database, /app/db, /data),
+ * while the source tree can be read-only and is wiped on every rebuild.
+ */
+function resolveDbPath() {
+    if (process.env.DB_PATH) {
+        const filePath = path.resolve(process.env.DB_PATH);
+        try {
+            fs.mkdirSync(path.dirname(filePath), { recursive: true });
+            return filePath;
+        } catch (error) {
+            logger.warn(`Cannot use DB_PATH (${filePath}): ${error.message}. Falling back.`);
+        }
+    }
+
+    const candidateDirs = [];
+    if (process.env.DATA_DIR) candidateDirs.push(process.env.DATA_DIR);
+    if (fs.existsSync('/app/data')) candidateDirs.push('/app/data');
+    candidateDirs.push(path.join(__dirname, '..')); // local development
+
+    for (const dir of candidateDirs) {
+        try {
+            fs.mkdirSync(dir, { recursive: true });
+            fs.accessSync(dir, fs.constants.W_OK);
+            return path.join(dir, 'data.db');
+        } catch (error) {
+            logger.warn(`Data directory "${dir}" is not writable: ${error.message}`);
+        }
+    }
+
+    // Last resort: let better-sqlite3 report a clear error if this also fails.
+    return path.join(__dirname, '..', 'data.db');
+}
+
 class DB {
     constructor() {
-        this.dbPath = path.join(__dirname, '..', 'data.db');
+        this.dbPath = resolveDbPath();
+        logger.info(`Database file: ${this.dbPath}`);
         this.db = null;
     }
 

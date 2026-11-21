@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "description": "Discord bot for Noi Tu word chain game",
   "main": "main.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "allowScripts": {
+    "better-sqlite3": true
+  },
   "scripts": {
     "start": "node main.js"
   },

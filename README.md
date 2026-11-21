@@ -95,6 +95,25 @@ Người dùng cần quyền **Manage Server** để dùng `/noitu_add`, `/noitu
 ![Bot Permissions](./images/bot-permissions.png)
 *Ảnh hướng dẫn cấu hình quyền cho bot*
 
+## ☁️ Deploy trên InjectCloud
+
+1. Fork repo này, sau đó tạo app trên InjectCloud với nguồn là **GitHub**, chọn đúng fork và branch.
+2. Trong tab **Environment** của app, thêm biến:
+
+   | Biến | Bắt buộc | Ghi chú |
+   | --- | --- | --- |
+   | `DISCORD_BOT_TOKEN` | ✅ | Hoặc dùng một trong các tên `DISCORD_TOKEN`, `BOT_TOKEN`, `TOKEN` |
+   | `OWNER_ID` | ❌ | ID Discord của bạn, dùng cho lệnh quản trị |
+   | `TOPGG_TOKEN` | ❌ | Chỉ cần nếu dùng tính năng vote Top.gg |
+
+3. Bấm **Deploy / Rebuild** (không phải Restart) lần đầu và mỗi khi đổi `package.json` hoặc lockfile.
+   - Runtime được tự nhận diện là Node.js 22; lệnh chạy là `npm start` (`node main.js`).
+   - `better-sqlite3` được phép build trong cả hai chế độ npm và pnpm.
+4. Dữ liệu SQLite được ghi tự động tại `/app/data/data.db` (thư mục persistent, writable của InjectCloud),
+   nên không bị mất khi restart/rebuild. Có thể ghi đè bằng `DB_PATH`.
+
+> ⚠️ Không bao giờ commit file `.env` hay token vào GitHub. InjectCloud lưu env vars mã hóa trong panel.
+
 ## 🎮 Cách Chơi
 
 ### Cơ Bản

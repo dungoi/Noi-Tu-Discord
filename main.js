@@ -6,14 +6,24 @@ const { setupLogger } = require('./src/utils');
 
 const logger = setupLogger('main');
 
+const TOKEN_ENV_NAMES = ['DISCORD_BOT_TOKEN', 'DISCORD_TOKEN', 'BOT_TOKEN', 'TOKEN'];
+
+function getDiscordToken() {
+    for (const name of TOKEN_ENV_NAMES) {
+        const value = process.env[name];
+        if (value && value.trim()) return value.trim();
+    }
+    return null;
+}
+
 async function main() {
     let bot;
     try {
         bot = new DiscordBot();
-        const token = process.env.DISCORD_BOT_TOKEN;
+        const token = getDiscordToken();
 
         if (!token) {
-            logger.error('DISCORD_BOT_TOKEN not found in environment variables');
+            logger.error(`Discord bot token not found. Set one of these environment variables in the panel: ${TOKEN_ENV_NAMES.join(', ')}`);
             process.exit(1);
         }
 
@@ -32,6 +42,9 @@ async function main() {
 
         process.on('SIGINT', () => handleShutdown('SIGINT'));
         process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+        process.on('unhandledRejection', (reason) => {
+            logger.error('Unhandled promise rejection:', reason);
+        });
 
         await bot.start(token);
         logger.info('Bot started successfully');
